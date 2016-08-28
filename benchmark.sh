@@ -4,21 +4,21 @@ set -euo pipefail
 
 function checkout_issue_6465() {
   (
-    cd $FORK
+    cd $fork
     git checkout 'issue-6465'
   )
 }
 
 function checkout_issue_6465_opt() {
   (
-    cd $FORK
+    cd $fork
     git checkout 'issue-6465-opt'
   )
 }
 
 function checkout_rightmosts_guided_bst() {
   (
-    cd $FORK
+    cd $fork
     git checkout rightmosts-guided-bst
   )
 }
@@ -39,6 +39,8 @@ function approach() {
 }
 
 function degree() {
+  checkout_issue_6465_opt
+
   local degrees=(2 4 8 16 32 64 128 256)
   rm -f $report_dir/degree_*
   local reports=""
@@ -54,6 +56,8 @@ function degree() {
 }
 
 function opt() {
+  checkout_issue_6465_opt
+
   btree_wo_opt_report="$report_dir/btree_wo_opt"
   rm -f $btree_wo_opt_report
   checkout_issue_6465 
@@ -70,6 +74,8 @@ function opt() {
 }
 
 function vs_llrb() {
+  checkout_issue_6465_opt
+
   no_random_btree_report=$report_dir/no_random_btree
   rm -fr $no_random_btree_report
   for no in {1..10}; do
@@ -85,6 +91,8 @@ function vs_llrb() {
 }
 
 function random() {
+  checkout_issue_6465_opt
+
   local lens=(16 32 64 128 256 512 1024)
   for len in ${lens[@]}; do
     local random_btree_report="$report_dir/random_btree_$len"
@@ -112,6 +120,7 @@ fi
 
 cmd=$1
 
+fork=$GOPAHT/src/github.com/yaojingguo/cockroach
 bench_url='github.com/yaojingguo/benchmark-interval-tree/bench'
 btree_based="$bench_url/btree_based"
 llrb_based="$bench_url/llrb_based"
