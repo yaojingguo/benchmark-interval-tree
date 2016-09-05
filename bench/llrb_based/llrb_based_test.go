@@ -1,107 +1,13 @@
 package llrb_based
 
 import (
-	"bytes"
-	"encoding/binary"
-	"flag"
-	"fmt"
 	"github.com/cockroachdb/cockroach/util/interval"
-	"math/rand"
+	"github.com/yaojingguo/benchmark-interval-tree/fixture"
 	"testing"
-	"time"
 )
-
-const (
-	intervalLen = 10
-)
-
-type Interval struct {
-	R  interval.Range
-	id uintptr
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-func (iv *Interval) Range() interval.Range {
-	return iv.R
-}
-
-func (iv *Interval) ID() uintptr {
-	return iv.id
-}
-
-func (iv *Interval) String() string {
-	return fmt.Sprintf("%v-%d", iv.Range(), iv.ID())
-}
-
-func ToBytes(b *testing.B, n uint32) interval.Comparable {
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, n); err != nil {
-		b.Fatalf("binary.Write error: %s", err)
-	}
-	return interval.Comparable(buf.Bytes())
-}
-
-func createInterval(b *testing.B, start, end uint32) interval.Interface {
-	iv := &Interval{interval.Range{ToBytes(b, start), ToBytes(b, end)}, uintptr(start)}
-	return iv
-}
-
-func Gen(b *testing.B) []interval.Interface {
-	return GenN(b, b.N)
-}
-
-func GenN(b *testing.B, N int) []interval.Interface {
-	var ivs []interval.Interface
-	for i := 0; i < N; i++ {
-		n := uint32(i)
-		ivs = append(ivs, createInterval(b, n, n+intervalLen))
-	}
-	return ivs
-}
-
-func getRandomRange(b *testing.B, n int) interval.Range {
-	s1 := getRandomByteSlice(b, n)
-	s2 := getRandomByteSlice(b, n)
-	cmp := bytes.Compare(s1, s2)
-	for cmp == 0 {
-		s2 = getRandomByteSlice(b, n)
-		cmp = bytes.Compare(s1, s2)
-	}
-	if cmp < 0 {
-		return interval.Range{Start: s1, End: s2}
-	}
-	return interval.Range{Start: s2, End: s1}
-}
-
-func getRandomByteSlice(b *testing.B, n int) interval.Comparable {
-	length := rand.Intn(n) + 1
-	s := make(interval.Comparable, length)
-	_, err := rand.Read(s)
-	if err != nil {
-		b.Fatalf("could not create random byte slice: %v", err)
-	}
-	return s
-}
-
-func RandomGenN(b *testing.B, N int) (ivs []interval.Interface) {
-	for i := 0; i < N; i++ {
-		iv := &Interval{getRandomRange(b, *length), uintptr(i)}
-		ivs = append(ivs, iv)
-	}
-	return
-}
-
-func RandomGen(b *testing.B) (ivs []interval.Interface) {
-	return RandomGenN(b, b.N)
-}
-
-var length = flag.Int("length", 1024, "max byte slice length")
 
 func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.LLRB) {
-	ivs = GenN(b, N)
+	ivs = fixture.GenN(b, N)
 	tree = &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, false); err != nil {
@@ -113,7 +19,7 @@ func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.LLR
 }
 
 func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.LLRB) {
-	ivs = RandomGenN(b, N)
+	ivs = fixture.RandomGenN(b, N)
 	tree = &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, false); err != nil {
@@ -125,7 +31,7 @@ func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interv
 }
 
 func BenchmarkInsert(b *testing.B) {
-	ivs := Gen(b)
+	ivs := fixture.Gen(b)
 	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	b.ResetTimer()
 	for _, e := range ivs {
@@ -136,7 +42,7 @@ func BenchmarkInsert(b *testing.B) {
 }
 
 func BenchmarkFastInsert(b *testing.B) {
-	ivs := Gen(b)
+	ivs := fixture.Gen(b)
 	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	b.ResetTimer()
 	for _, iv := range ivs {
@@ -164,13 +70,13 @@ func BenchmarkGet(b *testing.B) {
 	ivs, tree := loadTree(b, b.N)
 	b.ResetTimer()
 	for _, iv := range ivs {
-		ptr := iv.(*Interval)
+		ptr := iv.(*fixture.Interval)
 		tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
 	}
 }
 
 func BenchmarkRandomInsert(b *testing.B) {
-	ivs := RandomGen(b)
+	ivs := fixture.RandomGen(b)
 	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	b.ResetTimer()
 	for _, e := range ivs {
@@ -181,7 +87,7 @@ func BenchmarkRandomInsert(b *testing.B) {
 }
 
 func BenchmarkRandomFastInsert(b *testing.B) {
-	ivs := RandomGen(b)
+	ivs := fixture.RandomGen(b)
 	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	b.ResetTimer()
 	for _, iv := range ivs {
@@ -209,7 +115,7 @@ func BenchmarkRandomGet(b *testing.B) {
 	ivs, tree := loadRandomTree(b, b.N)
 	b.ResetTimer()
 	for _, iv := range ivs {
-		ptr := iv.(*Interval)
+		ptr := iv.(*fixture.Interval)
 		tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
 	}
 }
@@ -220,7 +126,7 @@ func benchmarkFixedSizeGet(b *testing.B, N int) {
 	iLen := len(ivs)
 	for i := 0; i < b.N; i++ {
 		iv := ivs[i%iLen]
-		ptr := iv.(*Interval)
+		ptr := iv.(*fixture.Interval)
 		tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
 	}
 }
@@ -243,12 +149,12 @@ func BenchmarkGetFrom1000k(b *testing.B) {
 
 func fewIntervals() []interval.Interface {
 	return []interval.Interface{
-		&Interval{interval.Range{Start: interval.Comparable{0x01}, End: interval.Comparable{0x02}}, uintptr(0)},
-		&Interval{interval.Range{Start: interval.Comparable{0x04}, End: interval.Comparable{0x06}}, uintptr(1)},
-		&Interval{interval.Range{Start: interval.Comparable{0x00}, End: interval.Comparable{0x02}}, uintptr(2)},
-		&Interval{interval.Range{Start: interval.Comparable{0x01}, End: interval.Comparable{0x06}}, uintptr(3)},
-		&Interval{interval.Range{Start: interval.Comparable{0x05}, End: interval.Comparable{0x15}}, uintptr(4)},
-		&Interval{interval.Range{Start: interval.Comparable{0x25}, End: interval.Comparable{0x30}}, uintptr(5)},
+		&fixture.Interval{interval.Range{Start: interval.Comparable{0x01}, End: interval.Comparable{0x02}}, uintptr(0)},
+		&fixture.Interval{interval.Range{Start: interval.Comparable{0x04}, End: interval.Comparable{0x06}}, uintptr(1)},
+		&fixture.Interval{interval.Range{Start: interval.Comparable{0x00}, End: interval.Comparable{0x02}}, uintptr(2)},
+		&fixture.Interval{interval.Range{Start: interval.Comparable{0x01}, End: interval.Comparable{0x06}}, uintptr(3)},
+		&fixture.Interval{interval.Range{Start: interval.Comparable{0x05}, End: interval.Comparable{0x15}}, uintptr(4)},
+		&fixture.Interval{interval.Range{Start: interval.Comparable{0x25}, End: interval.Comparable{0x30}}, uintptr(5)},
 	}
 }
 
