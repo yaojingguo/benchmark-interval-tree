@@ -100,9 +100,9 @@ func RandomGen(b *testing.B) (ivs []interval.Interface) {
 var degree = flag.Int("degree", 32, "B-tree degree")
 var length = flag.Int("length", 1024, "max byte slice length")
 
-func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.Tree) {
+func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.BTree) {
 	ivs = GenN(b, N)
-	tree = interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+	tree = interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, false); err != nil {
 			b.Fatalf("fast insert error: %s", err)
@@ -112,9 +112,9 @@ func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.Tre
 	return
 }
 
-func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.Tree) {
+func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.BTree) {
 	ivs = RandomGenN(b, N)
-	tree = interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+	tree = interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, false); err != nil {
 			b.Fatalf("fast insert error: %s", err)
@@ -125,7 +125,7 @@ func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interv
 }
 func BenchmarkInsert(b *testing.B) {
 	ivs := Gen(b)
-	tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+	tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 	b.ResetTimer()
 	for _, e := range ivs {
 		if err := tree.Insert(e, false); err != nil {
@@ -136,7 +136,7 @@ func BenchmarkInsert(b *testing.B) {
 
 func BenchmarkFastInsert(b *testing.B) {
 	ivs := Gen(b)
-	tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+	tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 	b.ResetTimer()
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, true); err != nil {
@@ -170,7 +170,7 @@ func BenchmarkGet(b *testing.B) {
 
 func BenchmarkRandomInsert(b *testing.B) {
 	ivs := RandomGen(b)
-	tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+	tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 	b.ResetTimer()
 	for _, e := range ivs {
 		if err := tree.Insert(e, false); err != nil {
@@ -181,7 +181,7 @@ func BenchmarkRandomInsert(b *testing.B) {
 
 func BenchmarkRandomFastInsert(b *testing.B) {
 	ivs := RandomGen(b)
-	tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+	tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 	b.ResetTimer()
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, true); err != nil {
@@ -254,7 +254,7 @@ func fewIntervals() []interval.Interface {
 func BenchmarkInsertWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+		tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 		for _, e := range ivs {
 			if err := tree.Insert(e, false); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -266,7 +266,7 @@ func BenchmarkInsertWithSmallTree(b *testing.B) {
 func BenchmarkFastInsertWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+		tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -281,13 +281,15 @@ func BenchmarkFastInsertWithSmallTree(b *testing.B) {
 func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+		b.StopTimer()
+		tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
 			}
 		}
 		tree.AdjustRanges()
+		b.StartTimer()
 		for _, e := range ivs {
 			if err := tree.Delete(e, false); err != nil {
 				b.Fatalf("delete error: %s", err)
@@ -304,13 +306,15 @@ func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
 func BenchmarkInsertAndGetWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := interval.NewWithDegree(interval.InclusiveOverlapper, *degree)
+		b.StopTimer()
+		tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
 			}
 		}
 		tree.AdjustRanges()
+		b.StartTimer()
 		for _, e := range ivs {
 			tree.Get(e.Range())
 		}

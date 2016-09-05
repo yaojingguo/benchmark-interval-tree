@@ -79,13 +79,15 @@ function vs_llrb() {
   no_random_btree_report=$report_dir/no_random_btree
   rm -fr $no_random_btree_report
   for no in {1..10}; do
-    go test -bench "$no_random" "$btree_based" >> $no_random_btree_report
+    # go test -benchmem -bench "$no_random" "$btree_based" >> $no_random_btree_report
+    go test -benchmem -bench . "$btree_based" >> $no_random_btree_report
   done
 
   no_random_llrb_report=$report_dir/no_random_llrb
   rm -fr $no_random_llrb_report
   for no in {1..10}; do
-    go test -bench "$no_random" "$llrb_based"  >> $no_random_llrb_report
+    # go test -benchmem -bench "$no_random" "$llrb_based"  >> $no_random_llrb_report
+    go test -benchmem -bench . "$llrb_based"  >> $no_random_llrb_report
   done
   benchstat "$no_random_llrb_report" "$no_random_btree_report"
 }
@@ -120,7 +122,7 @@ fi
 
 cmd=$1
 
-fork=$GOPAHT/src/github.com/yaojingguo/cockroach
+fork=$GOPATH/src/github.com/yaojingguo/cockroach
 bench_url='github.com/yaojingguo/benchmark-interval-tree/bench'
 btree_based="$bench_url/btree_based"
 llrb_based="$bench_url/llrb_based"
