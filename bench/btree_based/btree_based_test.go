@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"github.com/yaojingguo/cockroach/util/interval"
+	"github.com/cockroachdb/cockroach/util/interval"
 	"math/rand"
 	"testing"
 	"time"
