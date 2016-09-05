@@ -190,7 +190,6 @@ func BenchmarkFastInsertWithSmallTree(b *testing.B) {
 func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
 		tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
@@ -198,7 +197,6 @@ func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
 			}
 		}
 		tree.AdjustRanges()
-		b.StartTimer()
 		for _, e := range ivs {
 			if err := tree.Delete(e, false); err != nil {
 				b.Fatalf("delete error: %s", err)
@@ -215,7 +213,6 @@ func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
 func BenchmarkInsertAndGetWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
 		tree := interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
@@ -223,7 +220,6 @@ func BenchmarkInsertAndGetWithSmallTree(b *testing.B) {
 			}
 		}
 		tree.AdjustRanges()
-		b.StartTimer()
 		for _, e := range ivs {
 			tree.Get(e.Range())
 		}
