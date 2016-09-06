@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-var degree = flag.Int("degree", 32, "B-tree degree")
-
 func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.BTree) {
 	ivs = fixture.GenN(b, N)
 	tree = interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)

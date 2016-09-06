@@ -8,12 +8,14 @@ import (
 )
 
 var impl = flag.String("impl", "llrb", "interval tree implementation: llrb or btree")
+var degree = flag.Int("degree", 32, "B-tree degree")
 
 func NewTree() interval.Tree {
 	switch *impl {
 	case "llrb":
 		return &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	case "btree":
+		return interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
 	default:
 		panic("invalid implementation")
 	}
