@@ -117,17 +117,17 @@ func benchmarkInsertN(b *testing.B, N int) {
 	runInsert(b, ivs)
 }
 
-func benchmarkFastInsert(b *testing.B, N int) {
+func benchmarkFastInsertN(b *testing.B, N int) {
 	ivs := fixture.GenN(b, N)
 	runFastInsert(b, ivs)
 }
 
-func benchmarkDelete(b *testing.B, N int) {
+func benchmarkDeleteN(b *testing.B, N int) {
 	ivs := fixture.GenN(b, N)
 	runDelete(b, ivs)
 }
 
-func benchmarkGet(b *testing.B, N int) {
+func benchmarkGetN(b *testing.B, N int) {
 	ivs := fixture.GenN(b, N)
 	runGet(b, ivs)
 }
@@ -137,17 +137,17 @@ func benchmarkRandomInsertN(b *testing.B, N int) {
 	runInsert(b, ivs)
 }
 
-func benchmarkRandomFastInsert(b *testing.B, N int) {
+func benchmarkRandomFastInsertN(b *testing.B, N int) {
 	ivs := fixture.RandomGenN(b, N)
 	runFastInsert(b, ivs)
 }
 
-func benchmarkRandomDelete(b *testing.B, N int) {
+func benchmarkRandomDeleteN(b *testing.B, N int) {
 	ivs := fixture.RandomGenN(b, N)
 	runDelete(b, ivs)
 }
 
-func benchmarkRandomGet(b *testing.B, N int) {
+func benchmarkRandomGetN(b *testing.B, N int) {
 	ivs := fixture.RandomGenN(b, N)
 	runGet(b, ivs)
 }
@@ -167,15 +167,15 @@ func BenchmarkInsert(b *testing.B) {
 }
 
 func BenchmarkFastInsert(b *testing.B) {
-	benchmarkFastInsert(b, *size)
+	benchmarkFastInsertN(b, *size)
 }
 
 func BenchmarkDelete(b *testing.B) {
-	benchmarkDelete(b, *size)
+	benchmarkDeleteN(b, *size)
 }
 
 func BenchmarkGet(b *testing.B) {
-	benchmarkGet(b, *size)
+	benchmarkGetN(b, *size)
 }
 
 func BenchmarkRandomInsert(b *testing.B) {
@@ -183,15 +183,15 @@ func BenchmarkRandomInsert(b *testing.B) {
 }
 
 func BenchmarkRandomFastInsert(b *testing.B) {
-	benchmarkRandomFastInsert(b, *size)
+	benchmarkRandomFastInsertN(b, *size)
 }
 
 func BenchmarkRandomDelete(b *testing.B) {
-	benchmarkRandomDelete(b, *size)
+	benchmarkRandomDeleteN(b, *size)
 }
 
 func BenchmarkRandomGet(b *testing.B) {
-	benchmarkRandomGet(b, *size)
+	benchmarkRandomGetN(b, *size)
 }
 
 func BenchmarkInsertWithRangeGroupTestIntervals(b *testing.B) {
@@ -215,9 +215,26 @@ func BenchmarkGetWithRangeGroupTestIntervals(b *testing.B) {
 }
 
 const (
-	_Tiny = 8
+	_8    = 8
+	_100  = 100
 	_K    = 1000
 	_10K  = 10 * _K
 	_100K = 10 * _10K
 	_1M   = 10 * _100K
 )
+
+func BenchmarkInsert8(b *testing.B) {
+	benchmarkInsertN(b, _8)
+}
+
+func BenchmarkFastInsert8(b *testing.B) {
+	benchmarkFastInsertN(b, _8)
+}
+
+func BenchmarkDelete8(b *testing.B) {
+	benchmarkDeleteN(b, _8)
+}
+
+func BenchmarkGet8(b *testing.B) {
+	benchmarkGetN(b, _8)
+}
