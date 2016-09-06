@@ -12,7 +12,6 @@ import (
 )
 
 var length = flag.Int("length", 1024, "max byte slice length")
-var Size = flag.Int("size", 8, "tree size")
 
 const (
 	intervalLen = 10

@@ -9,10 +9,7 @@ import (
 
 var impl = flag.String("impl", "llrb", "interval tree implementation: llrb or btree")
 var degree = flag.Int("degree", 32, "B-tree degree")
-
-const (
-	M = 1 << 20
-)
+var size = flag.Int("size", 8, "tree size")
 
 func NewTree() interval.Tree {
 	switch *impl {
@@ -49,11 +46,22 @@ func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interv
 	return
 }
 
-func BenchmarkInsert(b *testing.B) {
-	ivs := fixture.GenN(b, M)
-	tree := NewTree()
+func benchmarkFixedSizeGet(b *testing.B, N int) {
+	ivs, tree := loadTree(b, N)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		for _, iv := range ivs {
+			ptr := iv.(*fixture.Interval)
+			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+		}
+	}
+}
+
+func BenchmarkInsert(b *testing.B) {
+	ivs := fixture.GenN(b, *size)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree := NewTree()
 		for _, iv := range ivs {
 			if err := tree.Insert(iv, false); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -63,10 +71,10 @@ func BenchmarkInsert(b *testing.B) {
 }
 
 func BenchmarkFastInsert(b *testing.B) {
-	ivs := fixture.GenN(b, M)
-	tree := NewTree()
+	ivs := fixture.GenN(b, *size)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		tree := NewTree()
 		for _, iv := range ivs {
 			if err := tree.Insert(iv, true); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -77,157 +85,13 @@ func BenchmarkFastInsert(b *testing.B) {
 }
 
 func BenchmarkDelete(b *testing.B) {
-	ivs, tree := loadTree(b, b.N)
+	ivs := fixture.GenN(b, *size)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, iv := range ivs {
-			if err := tree.Delete(iv, false); err != nil {
-				b.Fatalf("delete error: %s", err)
-			}
-		}
-		b.StopTimer()
-		if tree.Len() != 0 {
-			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
-		}
-		b.StartTimer()
-	}
+	benchmarkDelete(b, ivs)
 }
 
 func BenchmarkGet(b *testing.B) {
-	ivs, tree := loadTree(b, M)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, iv := range ivs {
-			ptr := iv.(*fixture.Interval)
-			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
-		}
-	}
-}
-
-func BenchmarkNewTree(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < 10; j++ {
-			_ = NewTree()
-		}
-	}
-}
-
-func BenchmarkRandomFixedInserts(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *fixture.Size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, false); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-	}
-}
-
-func BenchmarkRandomFixedFastInserts(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *fixture.Size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, true); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-		tree.AdjustRanges()
-	}
-}
-
-func BenchmarkRandomFixedDeletes(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *fixture.Size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, true); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-		tree.AdjustRanges()
-		b.StartTimer()
-		for _, iv := range ivs {
-			if err := tree.Delete(iv, false); err != nil {
-				b.Fatalf("delete error: %s", err)
-			}
-		}
-		if tree.Len() != 0 {
-			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
-		}
-	}
-}
-
-func BenchmarkRandomFixedGets(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *fixture.Size)
-	tree := NewTree()
-	for _, e := range ivs {
-		if err := tree.Insert(e, true); err != nil {
-			b.Fatalf("insert error: %s", err)
-		}
-	}
-	tree.AdjustRanges()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, e := range ivs {
-			ptr := e.(*fixture.Interval)
-			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
-		}
-	}
-}
-
-func BenchmarkRandomInsert(b *testing.B) {
-	ivs := fixture.RandomGen(b)
-	tree := NewTree()
-	b.ResetTimer()
-	for _, e := range ivs {
-		if err := tree.Insert(e, false); err != nil {
-			b.Fatalf("insert error: %s", err)
-		}
-	}
-}
-
-func BenchmarkRandomFastInsert(b *testing.B) {
-	ivs := fixture.RandomGen(b)
-	tree := NewTree()
-	b.ResetTimer()
-	for _, iv := range ivs {
-		if err := tree.Insert(iv, true); err != nil {
-			b.Fatalf("insert error: %s", err)
-		}
-	}
-	tree.AdjustRanges()
-}
-
-func BenchmarkRandomDelete(b *testing.B) {
-	ivs, tree := loadRandomTree(b, b.N)
-	b.ResetTimer()
-	for _, iv := range ivs {
-		if err := tree.Delete(iv, false); err != nil {
-			b.Fatalf("delete error: %s", err)
-		}
-	}
-	if tree.Len() != 0 {
-		b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
-	}
-}
-
-func BenchmarkRandomGet(b *testing.B) {
-	ivs, tree := loadRandomTree(b, b.N)
-	b.ResetTimer()
-	for _, iv := range ivs {
-		ptr := iv.(*fixture.Interval)
-		tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
-	}
-}
-
-func benchmarkFixedSizeGet(b *testing.B, N int) {
-	ivs, tree := loadTree(b, N)
+	ivs, tree := loadTree(b, *size)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		for _, iv := range ivs {
@@ -253,6 +117,87 @@ func BenchmarkGetFrom1000k(b *testing.B) {
 	benchmarkFixedSizeGet(b, 1000*1000)
 }
 
+func BenchmarkNewTree(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 10; j++ {
+			_ = NewTree()
+		}
+	}
+}
+
+func BenchmarkRandomInsert(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *size)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree := NewTree()
+		for _, e := range ivs {
+			if err := tree.Insert(e, false); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+	}
+}
+
+func BenchmarkRandomFastInsert(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *size)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree := NewTree()
+		for _, e := range ivs {
+			if err := tree.Insert(e, true); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+		tree.AdjustRanges()
+	}
+}
+
+func benchmarkDelete(b *testing.B, ivs []interval.Interface) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		tree := NewTree()
+		for _, e := range ivs {
+			if err := tree.Insert(e, true); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+		tree.AdjustRanges()
+		b.StartTimer()
+		for _, iv := range ivs {
+			if err := tree.Delete(iv, false); err != nil {
+				b.Fatalf("delete error: %s", err)
+			}
+		}
+		if tree.Len() != 0 {
+			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
+		}
+	}
+}
+
+func BenchmarkRandomDelete(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *size)
+	b.ResetTimer()
+	benchmarkDelete(b, ivs)
+}
+
+func BenchmarkRandomGet(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *size)
+	tree := NewTree()
+	for _, e := range ivs {
+		if err := tree.Insert(e, true); err != nil {
+			b.Fatalf("insert error: %s", err)
+		}
+	}
+	tree.AdjustRanges()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, e := range ivs {
+			ptr := e.(*fixture.Interval)
+			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+		}
+	}
+}
+
 func fewIntervals() []interval.Interface {
 	return []interval.Interface{
 		&fixture.Interval{interval.Range{Start: interval.Comparable{0x01}, End: interval.Comparable{0x02}}, uintptr(0)},
@@ -267,10 +212,12 @@ func fewIntervals() []interval.Interface {
 func BenchmarkInsertWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, false); err != nil {
-				b.Fatalf("insert error: %s", err)
+		for j := 0; j < 100; j++ {
+			tree := NewTree()
+			for _, e := range ivs {
+				if err := tree.Insert(e, false); err != nil {
+					b.Fatalf("insert error: %s", err)
+				}
 			}
 		}
 	}
@@ -279,53 +226,62 @@ func BenchmarkInsertWithSmallTree(b *testing.B) {
 func BenchmarkFastInsertWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, true); err != nil {
-				b.Fatalf("insert error: %s", err)
+		for j := 0; j < 100; j++ {
+			tree := NewTree()
+			for _, e := range ivs {
+				if err := tree.Insert(e, true); err != nil {
+					b.Fatalf("insert error: %s", err)
+				}
 			}
-		}
-		tree.AdjustRanges()
-	}
-}
-
-// If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
-// a long time to run.
-func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
-	ivs := fewIntervals()
-	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, true); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-		tree.AdjustRanges()
-		for _, e := range ivs {
-			if err := tree.Delete(e, false); err != nil {
-				b.Fatalf("delete error: %s", err)
-			}
-		}
-		if tree.Len() != 0 {
-			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
+			tree.AdjustRanges()
 		}
 	}
 }
 
 // If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
 // a long time to run.
-func BenchmarkInsertAndGetWithSmallTree(b *testing.B) {
+func BenchmarkDeleteWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, true); err != nil {
-				b.Fatalf("insert error: %s", err)
+		for j := 0; j < 100; j++ {
+			// b.StopTimer()
+			tree := NewTree()
+			for _, e := range ivs {
+				if err := tree.Insert(e, true); err != nil {
+					b.Fatalf("insert error: %s", err)
+				}
+			}
+			tree.AdjustRanges()
+			// b.StartTimer()
+			for _, e := range ivs {
+				if err := tree.Delete(e, false); err != nil {
+					b.Fatalf("delete error: %s", err)
+				}
+			}
+			if tree.Len() != 0 {
+				b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
 			}
 		}
-		tree.AdjustRanges()
-		for _, e := range ivs {
-			tree.Get(e.Range())
+	}
+}
+
+// If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
+// a long time to run.
+func BenchmarkGetWithSmallTree(b *testing.B) {
+	ivs := fewIntervals()
+	tree := NewTree()
+	for _, e := range ivs {
+		if err := tree.Insert(e, true); err != nil {
+			b.Fatalf("insert error: %s", err)
+		}
+	}
+	tree.AdjustRanges()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 100; j++ {
+			for _, e := range ivs {
+				tree.Get(e.Range())
+			}
 		}
 	}
 }
