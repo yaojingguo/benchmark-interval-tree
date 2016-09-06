@@ -90,6 +90,14 @@ func BenchmarkGet(b *testing.B) {
 	}
 }
 
+func BenchmarkNewTree(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 10; j++ {
+			_ = NewTree()
+		}
+	}
+}
+
 func BenchmarkRandomFixedInserts(b *testing.B) {
 	ivs := fixture.RandomGenN(b, *fixture.Size)
 	b.ResetTimer()
