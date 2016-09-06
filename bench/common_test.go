@@ -1,10 +1,23 @@
 package common
 
 import (
+	"flag"
 	"github.com/cockroachdb/cockroach/util/interval"
 	"github.com/yaojingguo/benchmark-interval-tree/fixture"
 	"testing"
 )
+
+var impl = flag.String("impl", "llrb", "interval tree implementation: llrb or btree")
+
+func NewTree() interval.Tree {
+	switch *impl {
+	case "llrb":
+		return &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+	case "btree":
+	default:
+		panic("invalid implementation")
+	}
+}
 
 func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.LLRB) {
 	ivs = fixture.GenN(b, N)
@@ -32,7 +45,7 @@ func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interv
 
 func BenchmarkInsert(b *testing.B) {
 	ivs := fixture.Gen(b)
-	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+	tree := NewTree()
 	b.ResetTimer()
 	for _, e := range ivs {
 		if err := tree.Insert(e, false); err != nil {
@@ -43,7 +56,7 @@ func BenchmarkInsert(b *testing.B) {
 
 func BenchmarkFastInsert(b *testing.B) {
 	ivs := fixture.Gen(b)
-	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+	tree := NewTree()
 	b.ResetTimer()
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, true); err != nil {
@@ -79,7 +92,7 @@ func BenchmarkRandomFixedInserts(b *testing.B) {
 	ivs := fixture.RandomGenN(b, *fixture.Size)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, false); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -92,7 +105,7 @@ func BenchmarkRandomFixedFastInserts(b *testing.B) {
 	ivs := fixture.RandomGenN(b, *fixture.Size)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -107,7 +120,7 @@ func BenchmarkRandomFixedDeletes(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
-		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -128,7 +141,7 @@ func BenchmarkRandomFixedDeletes(b *testing.B) {
 
 func BenchmarkRandomFixedGets(b *testing.B) {
 	ivs := fixture.RandomGenN(b, *fixture.Size)
-	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+	tree := NewTree()
 	for _, e := range ivs {
 		if err := tree.Insert(e, true); err != nil {
 			b.Fatalf("insert error: %s", err)
@@ -146,7 +159,7 @@ func BenchmarkRandomFixedGets(b *testing.B) {
 
 func BenchmarkRandomInsert(b *testing.B) {
 	ivs := fixture.RandomGen(b)
-	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+	tree := NewTree()
 	b.ResetTimer()
 	for _, e := range ivs {
 		if err := tree.Insert(e, false); err != nil {
@@ -157,7 +170,7 @@ func BenchmarkRandomInsert(b *testing.B) {
 
 func BenchmarkRandomFastInsert(b *testing.B) {
 	ivs := fixture.RandomGen(b)
-	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+	tree := NewTree()
 	b.ResetTimer()
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, true); err != nil {
@@ -230,7 +243,7 @@ func fewIntervals() []interval.Interface {
 func BenchmarkInsertWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, false); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -242,7 +255,7 @@ func BenchmarkInsertWithSmallTree(b *testing.B) {
 func BenchmarkFastInsertWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -257,7 +270,7 @@ func BenchmarkFastInsertWithSmallTree(b *testing.B) {
 func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
@@ -280,7 +293,7 @@ func BenchmarkInsertAndDeleteWithSmallTree(b *testing.B) {
 func BenchmarkInsertAndGetWithSmallTree(b *testing.B) {
 	ivs := fewIntervals()
 	for i := 0; i < b.N; i++ {
-		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
 				b.Fatalf("insert error: %s", err)
