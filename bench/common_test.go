@@ -1,4 +1,4 @@
-package llrb_based
+package common
 
 import (
 	"github.com/cockroachdb/cockroach/util/interval"
