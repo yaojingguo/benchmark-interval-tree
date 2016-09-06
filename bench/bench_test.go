@@ -44,83 +44,6 @@ func rangeGroupRestIntervals() []interval.Interface {
 	}
 }
 
-func BenchmarkInsertWithRangeGroupTestIntervals(b *testing.B) {
-	ivs := rangeGroupRestIntervals()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < 100; j++ {
-			tree := NewTree()
-			for _, e := range ivs {
-				if err := tree.Insert(e, false); err != nil {
-					b.Fatalf("insert error: %s", err)
-				}
-			}
-		}
-	}
-}
-
-func BenchmarkFastInsertWithRangeGroupTestIntervals(b *testing.B) {
-	ivs := rangeGroupRestIntervals()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < 100; j++ {
-			tree := NewTree()
-			for _, e := range ivs {
-				if err := tree.Insert(e, true); err != nil {
-					b.Fatalf("insert error: %s", err)
-				}
-			}
-			tree.AdjustRanges()
-		}
-	}
-}
-
-// If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
-// a long time to run.
-func BenchmarkDeleteWithRangeGroupTestIntervals(b *testing.B) {
-	ivs := rangeGroupRestIntervals()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < 100; j++ {
-			// b.StopTimer()
-			tree := NewTree()
-			for _, e := range ivs {
-				if err := tree.Insert(e, true); err != nil {
-					b.Fatalf("insert error: %s", err)
-				}
-			}
-			tree.AdjustRanges()
-			// b.StartTimer()
-			for _, e := range ivs {
-				if err := tree.Delete(e, false); err != nil {
-					b.Fatalf("delete error: %s", err)
-				}
-			}
-			if tree.Len() != 0 {
-				b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
-			}
-		}
-	}
-}
-
-// If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
-// a long time to run.
-func BenchmarkGetWithRangeGroupTestIntervals(b *testing.B) {
-	ivs := rangeGroupRestIntervals()
-	tree := NewTree()
-	for _, e := range ivs {
-		if err := tree.Insert(e, true); err != nil {
-			b.Fatalf("insert error: %s", err)
-		}
-	}
-	tree.AdjustRanges()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < 100; j++ {
-			for _, e := range ivs {
-				tree.Get(e.Range())
-			}
-		}
-	}
-}
-
 // 1M
 // 8
 const (
@@ -153,10 +76,12 @@ func runFastInsert(b *testing.B, ivs []interval.Interface) {
 	}
 }
 
+// If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
+// a long time to run.
 func runDelete(b *testing.B, ivs []interval.Interface) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		b.StopTimer()
+		// b.StopTimer()
 		tree := NewTree()
 		for _, e := range ivs {
 			if err := tree.Insert(e, true); err != nil {
@@ -164,7 +89,7 @@ func runDelete(b *testing.B, ivs []interval.Interface) {
 			}
 		}
 		tree.AdjustRanges()
-		b.StartTimer()
+		// b.StartTimer()
 		for _, iv := range ivs {
 			if err := tree.Delete(iv, false); err != nil {
 				b.Fatalf("delete error: %s", err)
@@ -269,25 +194,30 @@ func BenchmarkRandomGet(b *testing.B) {
 	benchmarkRandomGet(b, *size)
 }
 
-// tiny
-// func BenchmarkInsertTiny(b *testing.B) {
-// }
+func BenchmarkInsertWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
+	runInsert(b, ivs)
+}
 
-// large
-//
+func BenchmarkFastInsertWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
+	runFastInsert(b, ivs)
+}
 
-// func BenchmarkGetFrom1k(b *testing.B) {
-//   benchmarkFixedSizeGet(b, 1*1000)
-// }
+func BenchmarkDeleteWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
+	runDelete(b, ivs)
+}
 
-// func BenchmarkGetFrom10k(b *testing.B) {
-//   benchmarkFixedSizeGet(b, 10*1000)
-// }
+func BenchmarkGetWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
+	runGet(b, ivs)
+}
 
-// func BenchmarkGetFrom100k(b *testing.B) {
-//   benchmarkFixedSizeGet(b, 100*1000)
-// }
-
-// func BenchmarkGetFrom1000k(b *testing.B) {
-//   benchmarkFixedSizeGet(b, 1000*1000)
-// }
+const (
+	_Tiny = 8
+	_K    = 1000
+	_10K  = 10 * _K
+	_100K = 10 * _10K
+	_1M   = 10 * _100K
+)
