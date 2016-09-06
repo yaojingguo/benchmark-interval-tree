@@ -10,6 +10,10 @@ import (
 var impl = flag.String("impl", "llrb", "interval tree implementation: llrb or btree")
 var degree = flag.Int("degree", 32, "B-tree degree")
 
+const (
+	M = 1 << 20
+)
+
 func NewTree() interval.Tree {
 	switch *impl {
 	case "llrb":
@@ -46,47 +50,57 @@ func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interv
 }
 
 func BenchmarkInsert(b *testing.B) {
-	ivs := fixture.Gen(b)
+	ivs := fixture.GenN(b, M)
 	tree := NewTree()
 	b.ResetTimer()
-	for _, e := range ivs {
-		if err := tree.Insert(e, false); err != nil {
-			b.Fatalf("insert error: %s", err)
+	for i := 0; i < b.N; i++ {
+		for _, iv := range ivs {
+			if err := tree.Insert(iv, false); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
 		}
 	}
 }
 
 func BenchmarkFastInsert(b *testing.B) {
-	ivs := fixture.Gen(b)
+	ivs := fixture.GenN(b, M)
 	tree := NewTree()
 	b.ResetTimer()
-	for _, iv := range ivs {
-		if err := tree.Insert(iv, true); err != nil {
-			b.Fatalf("insert error: %s", err)
+	for i := 0; i < b.N; i++ {
+		for _, iv := range ivs {
+			if err := tree.Insert(iv, true); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
 		}
+		tree.AdjustRanges()
 	}
-	tree.AdjustRanges()
 }
 
 func BenchmarkDelete(b *testing.B) {
 	ivs, tree := loadTree(b, b.N)
 	b.ResetTimer()
-	for _, iv := range ivs {
-		if err := tree.Delete(iv, false); err != nil {
-			b.Fatalf("delete error: %s", err)
+	for i := 0; i < b.N; i++ {
+		for _, iv := range ivs {
+			if err := tree.Delete(iv, false); err != nil {
+				b.Fatalf("delete error: %s", err)
+			}
 		}
-	}
-	if tree.Len() != 0 {
-		b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
+		b.StopTimer()
+		if tree.Len() != 0 {
+			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
+		}
+		b.StartTimer()
 	}
 }
 
 func BenchmarkGet(b *testing.B) {
-	ivs, tree := loadTree(b, b.N)
+	ivs, tree := loadTree(b, M)
 	b.ResetTimer()
-	for _, iv := range ivs {
-		ptr := iv.(*fixture.Interval)
-		tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+	for i := 0; i < b.N; i++ {
+		for _, iv := range ivs {
+			ptr := iv.(*fixture.Interval)
+			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+		}
 	}
 }
 
@@ -215,11 +229,11 @@ func BenchmarkRandomGet(b *testing.B) {
 func benchmarkFixedSizeGet(b *testing.B, N int) {
 	ivs, tree := loadTree(b, N)
 	b.ResetTimer()
-	iLen := len(ivs)
 	for i := 0; i < b.N; i++ {
-		iv := ivs[i%iLen]
-		ptr := iv.(*fixture.Interval)
-		tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+		for _, iv := range ivs {
+			ptr := iv.(*fixture.Interval)
+			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+		}
 	}
 }
 
