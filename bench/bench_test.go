@@ -217,8 +217,8 @@ func BenchmarkGetWithRangeGroupTestIntervals(b *testing.B) {
 const (
 	_8    = 8
 	_100  = 100
-	_K    = 1000
-	_10K  = 10 * _K
+	_1K   = 1000
+	_10K  = 10 * _1K
 	_100K = 10 * _10K
 	_1M   = 10 * _100K
 )
@@ -238,3 +238,182 @@ func BenchmarkDelete8(b *testing.B) {
 func BenchmarkGet8(b *testing.B) {
 	benchmarkGetN(b, _8)
 }
+
+func BenchmarkInsert100(b *testing.B) {
+	benchmarkInsertN(b, _100)
+}
+
+func BenchmarkFastInsert100(b *testing.B) {
+	benchmarkFastInsertN(b, _100)
+}
+
+func BenchmarkDelete100(b *testing.B) {
+	benchmarkDeleteN(b, _100)
+}
+
+func BenchmarkGet100(b *testing.B) {
+	benchmarkGetN(b, _100)
+}
+
+func BenchmarkInsert1K(b *testing.B) {
+	benchmarkInsertN(b, _1K)
+}
+
+func BenchmarkFastInsert1K(b *testing.B) {
+	benchmarkFastInsertN(b, _1K)
+}
+
+func BenchmarkDelete1K(b *testing.B) {
+	benchmarkDeleteN(b, _1K)
+}
+
+func BenchmarkGet1K(b *testing.B) {
+	benchmarkGetN(b, _1K)
+}
+
+func BenchmarkInsert10K(b *testing.B) {
+	benchmarkInsertN(b, _10K)
+}
+
+func BenchmarkFastInsert10K(b *testing.B) {
+	benchmarkFastInsertN(b, _10K)
+}
+
+func BenchmarkDelete10K(b *testing.B) {
+	benchmarkDeleteN(b, _10K)
+}
+
+func BenchmarkGet10K(b *testing.B) {
+	benchmarkGetN(b, _10K)
+}
+
+func BenchmarkInsert100K(b *testing.B) {
+	benchmarkInsertN(b, _100K)
+}
+
+func BenchmarkFastInsert100K(b *testing.B) {
+	benchmarkFastInsertN(b, _100K)
+}
+
+func BenchmarkDelete100K(b *testing.B) {
+	benchmarkDeleteN(b, _100K)
+}
+
+func BenchmarkGet100K(b *testing.B) {
+	benchmarkGetN(b, _100K)
+}
+
+func BenchmarkInsert1M(b *testing.B) {
+	benchmarkInsertN(b, _1M)
+}
+
+func BenchmarkFastInsert1M(b *testing.B) {
+	benchmarkFastInsertN(b, _1M)
+}
+
+func BenchmarkDelete1M(b *testing.B) {
+	benchmarkDeleteN(b, _1M)
+}
+
+func BenchmarkGet1M(b *testing.B) {
+	benchmarkGetN(b, _1M)
+}
+
+// Random
+func BenchmarkRandomInsert8(b *testing.B) {
+	benchmarkRandomInsertN(b, _8)
+}
+
+func BenchmarkRandomFastInsert8(b *testing.B) {
+	benchmarkRandomFastInsertN(b, _8)
+}
+
+func BenchmarkRandomDelete8(b *testing.B) {
+	benchmarkRandomDeleteN(b, _8)
+}
+
+func BenchmarkRandomGet8(b *testing.B) {
+	benchmarkRandomGetN(b, _8)
+}
+
+func BenchmarkRandomInsert100(b *testing.B) {
+	benchmarkRandomInsertN(b, _100)
+}
+
+func BenchmarkRandomFastInsert100(b *testing.B) {
+	benchmarkRandomFastInsertN(b, _100)
+}
+
+func BenchmarkRandomDelete100(b *testing.B) {
+	benchmarkRandomDeleteN(b, _100)
+}
+
+func BenchmarkRandomGet100(b *testing.B) {
+	benchmarkRandomGetN(b, _100)
+}
+
+func BenchmarkRandomInsert1K(b *testing.B) {
+	benchmarkRandomInsertN(b, _1K)
+}
+
+func BenchmarkRandomFastInsert1K(b *testing.B) {
+	benchmarkRandomFastInsertN(b, _1K)
+}
+
+func BenchmarkRandomDelete1K(b *testing.B) {
+	benchmarkRandomDeleteN(b, _1K)
+}
+
+func BenchmarkRandomGet1K(b *testing.B) {
+	benchmarkRandomGetN(b, _1K)
+}
+
+func BenchmarkRandomInsert10K(b *testing.B) {
+	benchmarkRandomInsertN(b, _10K)
+}
+
+func BenchmarkRandomFastInsert10K(b *testing.B) {
+	benchmarkRandomFastInsertN(b, _10K)
+}
+
+func BenchmarkRandomDelete10K(b *testing.B) {
+	benchmarkRandomDeleteN(b, _10K)
+}
+
+func BenchmarkRandomGet10K(b *testing.B) {
+	benchmarkRandomGetN(b, _10K)
+}
+
+/*
+func BenchmarkRandomInsert100K(b *testing.B) {
+	benchmarkRandomInsertN(b, _100K)
+}
+
+func BenchmarkRandomFastInsert100K(b *testing.B) {
+	benchmarkRandomFastInsertN(b, _100K)
+}
+
+func BenchmarkRandomDelete100K(b *testing.B) {
+	benchmarkRandomDeleteN(b, _100K)
+}
+
+func BenchmarkRandomGet100K(b *testing.B) {
+	benchmarkRandomGetN(b, _100K)
+}
+
+func BenchmarkRandomInsert1M(b *testing.B) {
+	benchmarkRandomInsertN(b, _1M)
+}
+
+func BenchmarkRandomFastInsert1M(b *testing.B) {
+	benchmarkRandomFastInsertN(b, _1M)
+}
+
+func BenchmarkRandomDelete1M(b *testing.B) {
+	benchmarkRandomDeleteN(b, _1M)
+}
+
+func BenchmarkRandomGet1M(b *testing.B) {
+	benchmarkRandomGetN(b, _1M)
+}
+*/
