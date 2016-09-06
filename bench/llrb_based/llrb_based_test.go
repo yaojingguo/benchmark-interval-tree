@@ -75,6 +75,75 @@ func BenchmarkGet(b *testing.B) {
 	}
 }
 
+func BenchmarkRandomFixedInserts(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *fixture.Size)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		for _, e := range ivs {
+			if err := tree.Insert(e, false); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+	}
+}
+
+func BenchmarkRandomFixedFastInserts(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *fixture.Size)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		for _, e := range ivs {
+			if err := tree.Insert(e, true); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+		tree.AdjustRanges()
+	}
+}
+
+func BenchmarkRandomFixedDeletes(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *fixture.Size)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+		for _, e := range ivs {
+			if err := tree.Insert(e, true); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+		tree.AdjustRanges()
+		b.StartTimer()
+		for _, iv := range ivs {
+			if err := tree.Delete(iv, false); err != nil {
+				b.Fatalf("delete error: %s", err)
+			}
+		}
+		if tree.Len() != 0 {
+			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
+		}
+	}
+}
+
+func BenchmarkRandomFixedGets(b *testing.B) {
+	ivs := fixture.RandomGenN(b, *fixture.Size)
+	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+	for _, e := range ivs {
+		if err := tree.Insert(e, true); err != nil {
+			b.Fatalf("insert error: %s", err)
+		}
+	}
+	tree.AdjustRanges()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, e := range ivs {
+			ptr := e.(*fixture.Interval)
+			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+		}
+	}
+}
+
 func BenchmarkRandomInsert(b *testing.B) {
 	ivs := fixture.RandomGen(b)
 	tree := &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
