@@ -8,7 +8,7 @@ import (
 	"github.com/cockroachdb/cockroach/util/interval"
 	"math/rand"
 	"testing"
-	// "time"
+	"time"
 )
 
 var length = flag.Int("length", 1024, "max byte slice length")
@@ -24,7 +24,7 @@ type Interval struct {
 }
 
 func init() {
-	// rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
 }
 
 func (iv *Interval) Range() interval.Range {
