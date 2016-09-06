@@ -115,6 +115,38 @@ function random() {
   done
 }
 
+function llrb_btree_no_free_list() {
+  (
+    cd $ck
+    git checkout 'issue-6465-develop'
+  )
+  new_llrb_report=$report_dir/new_llrb
+  rm -f $new_llrb_report
+  for no in {1..10}; do
+    go test -benchmem -bench . ./bench >> $new_llrb_report
+  done
+
+  (
+    cd $ck
+    git checkout 'issue-6465-develop'
+  )
+  new_btree_report=$report_dir/new_btree
+  rm -f $new_btree_report
+  for no in {1..10}; do
+    go test -benchmem -bench . ./bench -impl btree >> $new_btree_report
+  done
+
+  (
+    cd $ck
+    git checkout 'no-free-list'
+  )
+  no_free_list_report=$report_dir/no_free_list
+  rm -f $no_free_list_report
+  for no in {1..10}; do
+    go test -benchmem -bench . ./bench -impl btree >> $no_free_list_report
+  done
+}
+
 if [[ $# -ne 1 ]]; then
   echo "command must be provided"
   exit 1
@@ -123,6 +155,7 @@ fi
 cmd=$1
 
 fork=$GOPATH/src/github.com/yaojingguo/cockroach
+ck=$GOPATH/src/github.com/cockroachdb/cockroach
 bench_url='github.com/yaojingguo/benchmark-interval-tree/bench'
 btree_based="$bench_url/btree_based"
 llrb_based="$bench_url/llrb_based"
@@ -142,6 +175,8 @@ case $cmd in
     vs_llrb;;
   random)
     random;;
+  new)
+    llrb_btree_no_free_list;;
   init)
     rm -fr $report_dir
     mkdir $report_dir;;
