@@ -33,49 +33,7 @@ func loadTree(b *testing.B, ivs []interval.Interface) (tree interval.Tree) {
 	return
 }
 
-func BenchmarkNewTree(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < 10; j++ {
-			_ = NewTree()
-		}
-	}
-}
-
-func BenchmarkRandomInsert(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *size)
-	benchmarkInsert(b, ivs)
-}
-
-func BenchmarkRandomFastInsert(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *size)
-	benchmarkFastInsert(b, ivs)
-}
-
-func BenchmarkRandomDelete(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *size)
-	b.ResetTimer()
-	benchmarkDelete(b, ivs)
-}
-
-func BenchmarkRandomGet(b *testing.B) {
-	ivs := fixture.RandomGenN(b, *size)
-	tree := NewTree()
-	for _, e := range ivs {
-		if err := tree.Insert(e, true); err != nil {
-			b.Fatalf("insert error: %s", err)
-		}
-	}
-	tree.AdjustRanges()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, e := range ivs {
-			ptr := e.(*fixture.Interval)
-			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
-		}
-	}
-}
-
-func fewIntervals() []interval.Interface {
+func rangeGroupRestIntervals() []interval.Interface {
 	return []interval.Interface{
 		&fixture.Interval{interval.Range{Start: interval.Comparable{0x01}, End: interval.Comparable{0x02}}, uintptr(0)},
 		&fixture.Interval{interval.Range{Start: interval.Comparable{0x04}, End: interval.Comparable{0x06}}, uintptr(1)},
@@ -86,8 +44,8 @@ func fewIntervals() []interval.Interface {
 	}
 }
 
-func BenchmarkInsertWithSmallTree(b *testing.B) {
-	ivs := fewIntervals()
+func BenchmarkInsertWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 100; j++ {
 			tree := NewTree()
@@ -100,8 +58,8 @@ func BenchmarkInsertWithSmallTree(b *testing.B) {
 	}
 }
 
-func BenchmarkFastInsertWithSmallTree(b *testing.B) {
-	ivs := fewIntervals()
+func BenchmarkFastInsertWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 100; j++ {
 			tree := NewTree()
@@ -117,8 +75,8 @@ func BenchmarkFastInsertWithSmallTree(b *testing.B) {
 
 // If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
 // a long time to run.
-func BenchmarkDeleteWithSmallTree(b *testing.B) {
-	ivs := fewIntervals()
+func BenchmarkDeleteWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
 	for i := 0; i < b.N; i++ {
 		for j := 0; j < 100; j++ {
 			// b.StopTimer()
@@ -144,8 +102,8 @@ func BenchmarkDeleteWithSmallTree(b *testing.B) {
 
 // If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
 // a long time to run.
-func BenchmarkGetWithSmallTree(b *testing.B) {
-	ivs := fewIntervals()
+func BenchmarkGetWithRangeGroupTestIntervals(b *testing.B) {
+	ivs := rangeGroupRestIntervals()
 	tree := NewTree()
 	for _, e := range ivs {
 		if err := tree.Insert(e, true); err != nil {
@@ -170,7 +128,7 @@ const (
 	large = 1 << 20
 )
 
-func benchmarkInsert(b *testing.B, ivs []interval.Interface) {
+func runInsert(b *testing.B, ivs []interval.Interface) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		tree := NewTree()
@@ -182,7 +140,7 @@ func benchmarkInsert(b *testing.B, ivs []interval.Interface) {
 	}
 }
 
-func benchmarkFastInsert(b *testing.B, ivs []interval.Interface) {
+func runFastInsert(b *testing.B, ivs []interval.Interface) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		tree := NewTree()
@@ -195,7 +153,8 @@ func benchmarkFastInsert(b *testing.B, ivs []interval.Interface) {
 	}
 }
 
-func benchmarkDelete(b *testing.B, ivs []interval.Interface) {
+func runDelete(b *testing.B, ivs []interval.Interface) {
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		tree := NewTree()
@@ -217,7 +176,7 @@ func benchmarkDelete(b *testing.B, ivs []interval.Interface) {
 	}
 }
 
-func benchmarkGet(b *testing.B, ivs []interval.Interface) {
+func runGet(b *testing.B, ivs []interval.Interface) {
 	tree := loadTree(b, ivs)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -228,32 +187,91 @@ func benchmarkGet(b *testing.B, ivs []interval.Interface) {
 	}
 }
 
+func benchmarkInsertN(b *testing.B, N int) {
+	ivs := fixture.GenN(b, N)
+	runInsert(b, ivs)
+}
+
+func benchmarkFastInsert(b *testing.B, N int) {
+	ivs := fixture.GenN(b, N)
+	runFastInsert(b, ivs)
+}
+
+func benchmarkDelete(b *testing.B, N int) {
+	ivs := fixture.GenN(b, N)
+	runDelete(b, ivs)
+}
+
+func benchmarkGet(b *testing.B, N int) {
+	ivs := fixture.GenN(b, N)
+	runGet(b, ivs)
+}
+
+func benchmarkRandomInsertN(b *testing.B, N int) {
+	ivs := fixture.RandomGenN(b, N)
+	runInsert(b, ivs)
+}
+
+func benchmarkRandomFastInsert(b *testing.B, N int) {
+	ivs := fixture.RandomGenN(b, N)
+	runFastInsert(b, ivs)
+}
+
+func benchmarkRandomDelete(b *testing.B, N int) {
+	ivs := fixture.RandomGenN(b, N)
+	runDelete(b, ivs)
+}
+
+func benchmarkRandomGet(b *testing.B, N int) {
+	ivs := fixture.RandomGenN(b, N)
+	runGet(b, ivs)
+}
+
 // Benchmarks
 
+func BenchmarkNewTree(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 10; j++ {
+			_ = NewTree()
+		}
+	}
+}
+
 func BenchmarkInsert(b *testing.B) {
-	ivs := fixture.GenN(b, *size)
-	benchmarkInsert(b, ivs)
+	benchmarkInsertN(b, *size)
 }
 
 func BenchmarkFastInsert(b *testing.B) {
-	ivs := fixture.GenN(b, *size)
-	benchmarkFastInsert(b, ivs)
+	benchmarkFastInsert(b, *size)
 }
 
 func BenchmarkDelete(b *testing.B) {
-	ivs := fixture.GenN(b, *size)
-	b.ResetTimer()
-	benchmarkDelete(b, ivs)
+	benchmarkDelete(b, *size)
 }
 
 func BenchmarkGet(b *testing.B) {
-	ivs := fixture.GenN(b, *size)
-	benchmarkGet(b, ivs)
+	benchmarkGet(b, *size)
+}
+
+func BenchmarkRandomInsert(b *testing.B) {
+	benchmarkRandomInsertN(b, *size)
+}
+
+func BenchmarkRandomFastInsert(b *testing.B) {
+	benchmarkRandomFastInsert(b, *size)
+}
+
+func BenchmarkRandomDelete(b *testing.B) {
+	benchmarkRandomDelete(b, *size)
+}
+
+func BenchmarkRandomGet(b *testing.B) {
+	benchmarkRandomGet(b, *size)
 }
 
 // tiny
-func BenchmarkInsertTiny(b *testing.B) {
-}
+// func BenchmarkInsertTiny(b *testing.B) {
+// }
 
 // large
 //
