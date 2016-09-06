@@ -22,9 +22,8 @@ func NewTree() interval.Tree {
 	}
 }
 
-func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.LLRB) {
-	ivs = fixture.GenN(b, N)
-	tree = &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
+func loadTree(b *testing.B, ivs []interval.Interface) (tree interval.Tree) {
+	tree = NewTree()
 	for _, iv := range ivs {
 		if err := tree.Insert(iv, false); err != nil {
 			b.Fatalf("fast insert error: %s", err)
@@ -32,89 +31,6 @@ func loadTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.LLR
 	}
 	tree.AdjustRanges()
 	return
-}
-
-func loadRandomTree(b *testing.B, N int) (ivs []interval.Interface, tree *interval.LLRB) {
-	ivs = fixture.RandomGenN(b, N)
-	tree = &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
-	for _, iv := range ivs {
-		if err := tree.Insert(iv, false); err != nil {
-			b.Fatalf("fast insert error: %s", err)
-		}
-	}
-	tree.AdjustRanges()
-	return
-}
-
-func benchmarkFixedSizeGet(b *testing.B, N int) {
-	ivs, tree := loadTree(b, N)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, iv := range ivs {
-			ptr := iv.(*fixture.Interval)
-			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
-		}
-	}
-}
-
-func BenchmarkInsert(b *testing.B) {
-	ivs := fixture.GenN(b, *size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, iv := range ivs {
-			if err := tree.Insert(iv, false); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-	}
-}
-
-func BenchmarkFastInsert(b *testing.B) {
-	ivs := fixture.GenN(b, *size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, iv := range ivs {
-			if err := tree.Insert(iv, true); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-		tree.AdjustRanges()
-	}
-}
-
-func BenchmarkDelete(b *testing.B) {
-	ivs := fixture.GenN(b, *size)
-	b.ResetTimer()
-	benchmarkDelete(b, ivs)
-}
-
-func BenchmarkGet(b *testing.B) {
-	ivs, tree := loadTree(b, *size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		for _, iv := range ivs {
-			ptr := iv.(*fixture.Interval)
-			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
-		}
-	}
-}
-
-func BenchmarkGetFrom1k(b *testing.B) {
-	benchmarkFixedSizeGet(b, 1*1000)
-}
-
-func BenchmarkGetFrom10k(b *testing.B) {
-	benchmarkFixedSizeGet(b, 10*1000)
-}
-
-func BenchmarkGetFrom100k(b *testing.B) {
-	benchmarkFixedSizeGet(b, 100*1000)
-}
-
-func BenchmarkGetFrom1000k(b *testing.B) {
-	benchmarkFixedSizeGet(b, 1000*1000)
 }
 
 func BenchmarkNewTree(b *testing.B) {
@@ -127,51 +43,12 @@ func BenchmarkNewTree(b *testing.B) {
 
 func BenchmarkRandomInsert(b *testing.B) {
 	ivs := fixture.RandomGenN(b, *size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, false); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-	}
+	benchmarkInsert(b, ivs)
 }
 
 func BenchmarkRandomFastInsert(b *testing.B) {
 	ivs := fixture.RandomGenN(b, *size)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, true); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-		tree.AdjustRanges()
-	}
-}
-
-func benchmarkDelete(b *testing.B, ivs []interval.Interface) {
-	for i := 0; i < b.N; i++ {
-		b.StopTimer()
-		tree := NewTree()
-		for _, e := range ivs {
-			if err := tree.Insert(e, true); err != nil {
-				b.Fatalf("insert error: %s", err)
-			}
-		}
-		tree.AdjustRanges()
-		b.StartTimer()
-		for _, iv := range ivs {
-			if err := tree.Delete(iv, false); err != nil {
-				b.Fatalf("delete error: %s", err)
-			}
-		}
-		if tree.Len() != 0 {
-			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
-		}
-	}
+	benchmarkFastInsert(b, ivs)
 }
 
 func BenchmarkRandomDelete(b *testing.B) {
@@ -285,3 +162,114 @@ func BenchmarkGetWithSmallTree(b *testing.B) {
 		}
 	}
 }
+
+// 1M
+// 8
+const (
+	tiny  = 8
+	large = 1 << 20
+)
+
+func benchmarkInsert(b *testing.B, ivs []interval.Interface) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree := NewTree()
+		for _, iv := range ivs {
+			if err := tree.Insert(iv, false); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+	}
+}
+
+func benchmarkFastInsert(b *testing.B, ivs []interval.Interface) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		tree := NewTree()
+		for _, iv := range ivs {
+			if err := tree.Insert(iv, true); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+		tree.AdjustRanges()
+	}
+}
+
+func benchmarkDelete(b *testing.B, ivs []interval.Interface) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		tree := NewTree()
+		for _, e := range ivs {
+			if err := tree.Insert(e, true); err != nil {
+				b.Fatalf("insert error: %s", err)
+			}
+		}
+		tree.AdjustRanges()
+		b.StartTimer()
+		for _, iv := range ivs {
+			if err := tree.Delete(iv, false); err != nil {
+				b.Fatalf("delete error: %s", err)
+			}
+		}
+		if tree.Len() != 0 {
+			b.Errorf("expectecd tree length %d, got %d", 0, tree.Len())
+		}
+	}
+}
+
+func benchmarkGet(b *testing.B, ivs []interval.Interface) {
+	tree := loadTree(b, ivs)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for _, iv := range ivs {
+			ptr := iv.(*fixture.Interval)
+			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+		}
+	}
+}
+
+// Benchmarks
+
+func BenchmarkInsert(b *testing.B) {
+	ivs := fixture.GenN(b, *size)
+	benchmarkInsert(b, ivs)
+}
+
+func BenchmarkFastInsert(b *testing.B) {
+	ivs := fixture.GenN(b, *size)
+	benchmarkFastInsert(b, ivs)
+}
+
+func BenchmarkDelete(b *testing.B) {
+	ivs := fixture.GenN(b, *size)
+	b.ResetTimer()
+	benchmarkDelete(b, ivs)
+}
+
+func BenchmarkGet(b *testing.B) {
+	ivs := fixture.GenN(b, *size)
+	benchmarkGet(b, ivs)
+}
+
+// tiny
+func BenchmarkInsertTiny(b *testing.B) {
+}
+
+// large
+//
+
+// func BenchmarkGetFrom1k(b *testing.B) {
+//   benchmarkFixedSizeGet(b, 1*1000)
+// }
+
+// func BenchmarkGetFrom10k(b *testing.B) {
+//   benchmarkFixedSizeGet(b, 10*1000)
+// }
+
+// func BenchmarkGetFrom100k(b *testing.B) {
+//   benchmarkFixedSizeGet(b, 100*1000)
+// }
+
+// func BenchmarkGetFrom1000k(b *testing.B) {
+//   benchmarkFixedSizeGet(b, 1000*1000)
+// }
