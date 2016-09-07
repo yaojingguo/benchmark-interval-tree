@@ -16,7 +16,7 @@ func NewTree() interval.Tree {
 	case "llrb":
 		return &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
 	case "btree":
-		return interval.NewBTreeWithDegree(interval.InclusiveOverlapper, *degree)
+		return &interval.BTree{Overlapper: interval.InclusiveOverlapper, Degree: *degree}
 	default:
 		panic("invalid implementation")
 	}
