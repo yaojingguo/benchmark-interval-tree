@@ -107,7 +107,7 @@ func runGet(b *testing.B, ivs []interval.Interface) {
 	for i := 0; i < b.N; i++ {
 		for _, iv := range ivs {
 			ptr := iv.(*fixture.Interval)
-			tree.Get(interval.Range{ptr.R.Start, ptr.R.End})
+			tree.Get(ptr.R)
 		}
 	}
 }
@@ -384,7 +384,6 @@ func BenchmarkRandomGet10K(b *testing.B) {
 	benchmarkRandomGetN(b, _10K)
 }
 
-/*
 func BenchmarkRandomInsert100K(b *testing.B) {
 	benchmarkRandomInsertN(b, _100K)
 }
@@ -397,9 +396,11 @@ func BenchmarkRandomDelete100K(b *testing.B) {
 	benchmarkRandomDeleteN(b, _100K)
 }
 
+/*
 func BenchmarkRandomGet100K(b *testing.B) {
 	benchmarkRandomGetN(b, _100K)
 }
+*/
 
 func BenchmarkRandomInsert1M(b *testing.B) {
 	benchmarkRandomInsertN(b, _1M)
@@ -413,6 +414,7 @@ func BenchmarkRandomDelete1M(b *testing.B) {
 	benchmarkRandomDeleteN(b, _1M)
 }
 
+/*
 func BenchmarkRandomGet1M(b *testing.B) {
 	benchmarkRandomGetN(b, _1M)
 }
