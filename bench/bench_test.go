@@ -215,6 +215,7 @@ func BenchmarkGetWithRangeGroupTestIntervals(b *testing.B) {
 }
 
 const (
+	_4    = 4
 	_8    = 8
 	_100  = 100
 	_1K   = 1000
@@ -222,6 +223,22 @@ const (
 	_100K = 10 * _10K
 	_1M   = 10 * _100K
 )
+
+func BenchmarkInsert4(b *testing.B) {
+	benchmarkInsertN(b, _4)
+}
+
+func BenchmarkFastInsert4(b *testing.B) {
+	benchmarkFastInsertN(b, _4)
+}
+
+func BenchmarkDelete4(b *testing.B) {
+	benchmarkDeleteN(b, _4)
+}
+
+func BenchmarkGet4(b *testing.B) {
+	benchmarkGetN(b, _4)
+}
 
 func BenchmarkInsert8(b *testing.B) {
 	benchmarkInsertN(b, _8)
@@ -320,6 +337,22 @@ func BenchmarkGet1M(b *testing.B) {
 }
 
 // Random
+func BenchmarkRandomInsert4(b *testing.B) {
+	benchmarkRandomInsertN(b, _4)
+}
+
+func BenchmarkRandomFastInsert4(b *testing.B) {
+	benchmarkRandomFastInsertN(b, _4)
+}
+
+func BenchmarkRandomDelete4(b *testing.B) {
+	benchmarkRandomDeleteN(b, _4)
+}
+
+func BenchmarkRandomGet4(b *testing.B) {
+	benchmarkRandomGetN(b, _4)
+}
+
 func BenchmarkRandomInsert8(b *testing.B) {
 	benchmarkRandomInsertN(b, _8)
 }
