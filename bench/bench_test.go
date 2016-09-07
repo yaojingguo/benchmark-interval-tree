@@ -430,6 +430,7 @@ func BenchmarkRandomDelete100K(b *testing.B) {
 }
 
 /*
+// Commented since it takes a too long time to finish.
 func BenchmarkRandomGet100K(b *testing.B) {
 	benchmarkRandomGetN(b, _100K)
 }
@@ -448,6 +449,7 @@ func BenchmarkRandomDelete1M(b *testing.B) {
 }
 
 /*
+// Commented since it takes a too long time to finish.
 func BenchmarkRandomGet1M(b *testing.B) {
 	benchmarkRandomGetN(b, _1M)
 }
