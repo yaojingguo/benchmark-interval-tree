@@ -76,8 +76,8 @@ func runFastInsert(b *testing.B, ivs []interval.Interface) {
 	}
 }
 
-// If b.StopTimer and b.StartTimer are used to ignore the costs of inserts. "go test -bench ." takes
-// a long time to run.
+// If b.StopTimer and b.StartTimer are used to ignore the costs of inserts, this benchmark takes a
+// too long time to finish.
 func runDelete(b *testing.B, ivs []interval.Interface) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
