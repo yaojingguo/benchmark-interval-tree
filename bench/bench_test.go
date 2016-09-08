@@ -14,11 +14,24 @@ var size = flag.Int("size", 8, "tree size")
 func NewTree() interval.Tree {
 	switch *impl {
 	case "llrb":
-		return &interval.LLRB{Overlapper: interval.InclusiveOverlapper}
-	case "btree":
-		return &interval.BTree{Overlapper: interval.InclusiveOverlapper, Degree: *degree}
+		return interval.Tree{Overlapper: interval.InclusiveOverlapper}
+	// case "btree":
+	//   return &interval.BTree{Overlapper: interval.InclusiveOverlapper, Degree: *degree}
 	default:
 		panic("invalid implementation")
+	}
+}
+
+func NewLLRB() interval.Tree {
+	return interval.Tree{Overlapper: interval.InclusiveOverlapper}
+}
+
+func BenchmarkLLRB(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 10; j++ {
+			_ = interval.Tree{Overlapper: interval.InclusiveOverlapper}
+			// _ = NewLLRB()
+		}
 	}
 }
 
