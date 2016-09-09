@@ -149,9 +149,8 @@ func benchmarkRandomGetN(b *testing.B, N int) {
 
 func BenchmarkNewTree(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		for j := 0; j < 10; j++ {
-			_ = NewTree()
-		}
+		// _ = NewTree()
+		_ = interval.NewTree(interval.InclusiveOverlapper)
 	}
 }
 
