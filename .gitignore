@@ -23,7 +23,7 @@ _testmain.go
 *.test
 *.prof
 *.txt
-cpu.out
-mem.out
+*.cpu.out
+*.mem.out
 
 /report
