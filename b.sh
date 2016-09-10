@@ -37,7 +37,7 @@ function micro() {
       ;;
   esac
   local report=$report_dir/${branch}_${impl}_micro
-  rm -f $report_dir
+  rm -f $report
   for no in `seq $count`; do
     go test -tags "'${tags}'" -benchmem -bench . ./bench >> $report
   done
@@ -55,7 +55,6 @@ branch='develop'
   cd $ck
   git checkout $branch
 )
-micro $branch 'llrb'
 sql_00_C $branch 'llrb'
 
 branch='final'
@@ -63,7 +62,6 @@ branch='final'
   cd $ck
   git checkout $branch
 )
-git checkout $branch
 micro $branch 'llrb'
 micro $branch 'btree'
 sql_00_C $branch 'llrb'
