@@ -67,7 +67,7 @@ micro $branch 'btree'
 sql_00_C $branch 'llrb'
 sql_00_C $branch 'btree'
 
-branch='remove-degree'
+branch='no-degree'
 (
   cd $ck
   git checkout $branch
