@@ -21,7 +21,7 @@ function sql_00_C() {
   local report=$report_dir/${branch}_${impl}_00_C
   rm -f $report
   for no in `seq $count`; do
-    go test -tags "'${tags}'" -run - -benchmem -bench 00_C ./sql 2>/dev/null >> $report
+    go test -tags "'${tags}'" -run - -benchmem -bench 00_C github.com/cockroachdb/cockroach/sql 2>/dev/null >> $report
   done
 }
 
@@ -49,27 +49,30 @@ fi
 echo "iteration count ${count}"
 mkdir -p $report_dir
 
-
+# micro benchmarks
 branch='develop'
+(
+  cd $ck
+  git checkout $branch
+)
 micro $branch 'llrb'
-branch='final'
-micro $branch 'llrb'
-micro $branch 'btree'
-branch='remove-degree'
-micro $branch 'btree'
-
-cd $ck
-
-branch='develop'
-git checkout $branch
 sql_00_C $branch 'llrb'
 
 branch='final'
+(
+  cd $ck
+  git checkout $branch
+)
 git checkout $branch
+micro $branch 'llrb'
+micro $branch 'btree'
 sql_00_C $branch 'llrb'
 sql_00_C $branch 'btree'
 
 branch='remove-degree'
-git checkout $branch
+(
+  cd $ck
+  git checkout $branch
+)
+micro $branch 'btree'
 sql_00_C $branch 'btree'
-cd $saved_dir
