@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-saved_dir=$(pwd)
-report_dir=$saved_dir/report
+dir=$(pwd)
+report_dir=$dir/report
 ck=$GOPATH/src/github.com/cockroachdb/cockroach
 count=10
 
