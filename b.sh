@@ -7,6 +7,13 @@ report_dir=$dir/report
 ck=$GOPATH/src/github.com/cockroachdb/cockroach
 count=10
 
+function git_checkout() {
+  (
+    cd $ck
+    git checkout $1
+  )
+}
+
 function sql_00_C() {
   local branch=$1
   local impl=$2
@@ -50,27 +57,40 @@ echo "iteration count ${count}"
 mkdir -p $report_dir
 
 # micro benchmarks
-branch='develop'
-(
-  cd $ck
-  git checkout $branch
-)
-sql_00_C $branch 'llrb'
+# branch='develop'
+# (
+#   cd $ck
+#   git checkout $branch
+# )
+# sql_00_C $branch 'llrb'
 
-branch='final'
-(
-  cd $ck
-  git checkout $branch
-)
-micro $branch 'llrb'
+# branch='final'
+# (
+#   cd $ck
+#   git checkout $branch
+# )
+# micro $branch 'llrb'
+# micro $branch 'btree'
+# sql_00_C $branch 'llrb'
+# sql_00_C $branch 'btree'
+
+# branch='no-degree'
+# (
+#   cd $ck
+#   git checkout $branch
+# )
+# micro $branch 'btree'
+# sql_00_C $branch 'btree'
+# branch='perf-changes'
+
+branch='perf-changes'
+
+git_checkout "$branch"
 micro $branch 'btree'
-sql_00_C $branch 'llrb'
 sql_00_C $branch 'btree'
+  
+branch='changes-for-review'
 
-branch='no-degree'
-(
-  cd $ck
-  git checkout $branch
-)
+git_checkout "$branch"
 micro $branch 'btree'
 sql_00_C $branch 'btree'
