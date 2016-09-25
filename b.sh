@@ -83,14 +83,38 @@ mkdir -p $report_dir
 # sql_00_C $branch 'btree'
 # branch='perf-changes'
 
-branch='perf-changes'
+# branch='perf-changes'
 
-git_checkout "$branch"
-micro $branch 'btree'
-sql_00_C $branch 'btree'
+# git_checkout "$branch"
+# micro $branch 'btree'
+# sql_00_C $branch 'btree'
   
-branch='changes-for-review'
+# branch='changes-for-review'
 
+# git_checkout "$branch"
+# micro $branch 'btree'
+# sql_00_C $branch 'btree'
+
+
+branch='changes-for-review'
 git_checkout "$branch"
-micro $branch 'btree'
-sql_00_C $branch 'btree'
+
+report=$report_dir/${branch}_btree_new_tree
+rm -fr $report
+for no in `seq $count`; do
+  go test -bench BenchmarkNewTree -benchmem -tags btree ./bench >> $report
+done
+
+report=$report_dir/${branch}_llrb_new_tree
+rm -fr $report
+for no in `seq $count`; do
+  go test -bench BenchmarkNewTree -benchmem ./bench >> $report
+done
+
+branch='perf-changes'
+git_checkout "$branch"
+report=$report_dir/${branch}_btree_new_tree
+rm -fr $report
+for no in `seq $count`; do
+  go test -bench BenchmarkNewTree -benchmem -tags btree ./bench >> $report
+done
