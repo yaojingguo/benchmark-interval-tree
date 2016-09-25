@@ -148,9 +148,13 @@ func benchmarkRandomGetN(b *testing.B, N int) {
 // Benchmarks
 
 func BenchmarkNewTree(b *testing.B) {
+	const size = 10
+	slice := make([]*interval.Tree, size)
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		for j := 0; j < 10; j++ {
-			_ = NewTree()
+		for j := 0; j < size; j++ {
+			tree := NewTree()
+			slice[j] = &tree
 		}
 	}
 }
